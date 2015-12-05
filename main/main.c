@@ -6,10 +6,11 @@
 
 int main(int argc, char *argv[]) {
 	if (argc <= 1) {
-		printf("arguments error, need a config file.\n");
-		return 0;
+		//printf("arguments error, need a config file.\n");
+		//return 0;
 	}
 	char *file = argv[1];
+	file = "E:\\source\\xServer\\example\\config.win.lua";
 	struct lua_State *L = luaL_newstate();
 	luaL_openlibs(L);
 	if (luaL_dofile(L, file)) {

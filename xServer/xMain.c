@@ -27,85 +27,36 @@ static int32_t server_message_dispatch() {
 	return 0;
 }
 
-static
-#if defined(PLATFORM_WIN)
-unsigned int __stdcall
-#elif defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
-void *
-#endif
+static void *
 timer_loop(void *p) {
 	for (;;) {
 		global_timer_update();
-#if defined(PLATFORM_WIN)
-		Sleep(2);
-#elif defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
 		usleep(2500);
-#endif
 	}
-#if defined(PLATFORM_WIN)
-	return 0;
-#elif defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
 	return NULL;
-#endif
 }
 
-static
-#if defined(PLATFORM_WIN)
-unsigned int __stdcall
-#elif defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
-void *
-#endif
+static void *
 message_loop(void *p) {
 	for (;;) {
 		if (server_message_dispatch() == 0) {
-#if defined(PLATFORM_WIN)
-			Sleep(1);
-#elif defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
 			usleep(1000);
-#endif
 		}
 	}
-#if defined(PLATFORM_WIN)
-	return 0;
-#elif defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
 	return NULL;
-#endif
 }
 
-static
-#if defined(PLATFORM_WIN)
-unsigned int __stdcall
-#elif defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
-void *
-#endif
+static void *
 network_loop(void *p) {
 	for (;;) {
 		if (global_network_dispatch() == 0) {
-#if defined(PLATFORM_WIN)
-			Sleep(1);
-#elif defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
 			usleep(1000);
-#endif
 		}
 	}
-#if defined(PLATFORM_WIN)
-	return 0;
-#elif defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
 	return NULL;
-#endif
 }
 
 static void start_thread(int32_t thread) {
-#if defined(PLATFORM_WIN)
-	int32_t i = 0;
-	HANDLE pid[MAX_THREAD];
-	pid[i++] = (HANDLE)_beginthreadex(NULL, 0, timer_loop, NULL, 0, NULL);
-	pid[i++] = (HANDLE)_beginthreadex(NULL, 0, network_loop, NULL, 0, NULL);
-	for (; i < thread; i++) {
-		pid[i] = (HANDLE)_beginthreadex(NULL, 0, message_loop, NULL, 0, NULL);
-	}
-	WaitForMultipleObjects(thread, pid, TRUE, INFINITE);
-#elif defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
 	int32_t i = 0;
 	pthread_t pid[MAX_THREAD];
 	pthread_create(&pid[i++], NULL, timer_loop, NULL);
@@ -116,7 +67,6 @@ static void start_thread(int32_t thread) {
 	for (i = 0; i < thread; i++) {
 		pthread_join(pid[i], NULL);
 	}
-#endif
 }
 
 X_SERVER_API void server_start() {
