@@ -99,22 +99,6 @@ void event_remove_write(x_event_fd fd, x_socket_fd socket_fd, void *data) {
 }
 
 int32_t event_dispatch(x_event_fd fd, struct x_event *event) {
-#if defined(PLATFORM_WIN)
-	return 0;
-#elif defined(PLATFORM_OSX)
-	int32_t count = kevent(fd, NULL, 0, s_events, s_max, NULL);
-	for (int32_t i = 0; i < count; i++) {
-		event[i].data = s_events[i].udata;
-		event[i].type = 0;
-		if (s_events[i].filter == EVFILT_READ) {
-			event[i].type |= x_event_type_read;
-		}
-		if (s_events[i].filter == EVFILT_WRITE) {
-			event[i].type |= x_event_type_write;
-		}
-    }
-    return count;
-#elif defined(PLATFORM_LINUX)
 	int32_t count = epoll_wait(fd, s_events, s_max, -1);
 	for (int32_t i = 0; i < count; i++) {
 		event[i].data = s_events[i].data.ptr;
@@ -127,5 +111,4 @@ int32_t event_dispatch(x_event_fd fd, struct x_event *event) {
 		}
 	}
 	return count;
-#endif
 }

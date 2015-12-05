@@ -207,38 +207,6 @@ void global_network_destroy(struct x_network *network) {
 }
 
 int32_t global_network_dispatch() {
-#if defined(PLATFORM_WIN)
-	fd_set fds_read;
-	fd_set fds_write;
-	FD_ZERO(&fds_read);
-	FD_ZERO(&fds_write);
-	struct timeval time = {0, 0};
-	for (int32_t i = 0; i < MAX_SOCKET_COUNT; i++) {
-		struct x_network *network = N->network_pool[(N->next_index + i) & SOCKET_INDEX_MASK];
-		if (network) {
-			FD_SET(network->socket->fd, &fds_read);
-			if (network->type == network_type_established) {
-				FD_SET(network->socket->fd, &fds_write);
-			}
-		}
-	}
-	int32_t count = select(MAX_SOCKET_COUNT, &fds_read, &fds_write, NULL, &time);
-	if (count <= 0) {
-		return 0;
-	}
-	for (int32_t i = 0; i < MAX_SOCKET_COUNT; i++) {
-		struct x_network *network = N->network_pool[(N->next_index + i) & SOCKET_INDEX_MASK];
-		if (network) {
-			if (FD_ISSET(network->socket->fd, &fds_read)) {
-				network_dispatch(network, x_event_type_read);
-			}
-			if (FD_ISSET(network->socket->fd, &fds_write)) {
-				network_dispatch(network, x_event_type_write);
-			}
-		}
-	}
-	return 1;
-#elif defined(PLATFORM_OSX) || defined(PLATFORM_LINUX)
 	int32_t count = event_dispatch(N->event_fd, N->event_cache);
 	if (count > 0) {
 		for (int32_t i = 0; i < count; i++) {
@@ -247,5 +215,4 @@ int32_t global_network_dispatch() {
 		return 1;
 	}
 	return 0;
-#endif
 }
